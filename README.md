@@ -2,6 +2,8 @@
 
 [Canonical](https://chasenorman.com) exhaustively searches for terms in dependent type theory. The `canonical` tactic proves theorems, synthesizes programs, and constructs objects in Lean.
 
+https://github.com/user-attachments/assets/ec13ad85-7d09-4a32-9c73-3b5b501722a4
+
 ## Installation
 
 Canonical is available for Lean `v4.18.0`.
