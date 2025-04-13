@@ -60,8 +60,8 @@ instance : ToString Tm where toString := termToString
 @[extern "typ_to_string"] opaque typToString: @& Typ → String
 instance : ToString Typ where toString := typToString
 
-/-- Generate terms of a given type, with given timeout, desired count, and `synth` flag -/
-@[extern "canonical"] opaque canonical : @& Typ → UInt64 → USize → Bool → CanonicalResult
+/-- Generate terms of a given type, with given timeout, desired count, `synth` and `debug` flags -/
+@[extern "canonical"] opaque canonical : @& Typ → UInt64 → USize → Bool → Bool → CanonicalResult
 
 /-- Some Lean Π-types cannot be converted into Canonical Π-types,
     and are instead converted into this structure. -/
@@ -493,6 +493,7 @@ structure CanonicalConfig where
   synth: Bool := false
   /-- Provides `(A → B) : Sort` as an axiom to Canonical. -/
   pi: Bool := false
+  debug: Bool := false
 
 declare_config_elab canonicalConfig CanonicalConfig
 
@@ -507,8 +508,8 @@ def checkInterrupted : CoreM Bool := do
 --   handle.flush
 
 -- WN: I'm not sure this makes a difference
-def canonicalIO (type : @& Typ) (timeout : UInt64) (count : USize) (synth : Bool) : IO CanonicalResult :=
-  do pure (canonical type timeout count synth)
+def canonicalIO (type : @& Typ) (timeout : UInt64) (count : USize) (synth : Bool) (debug: Bool) : IO CanonicalResult :=
+  do pure (canonical type timeout count synth debug)
 
 end Canonical
 
@@ -536,9 +537,11 @@ elab (name := canonicalSeq) "canonical " timeout_syntax:(num)? config:Parser.Tac
     let timeout := match timeout_syntax with
     | some n => n.getNat
     | none => 10
-    -- dbg_trace type -- Canonical goal type
+    if config.debug then
+      dbg_trace type
     Core.checkInterrupted
-    let task ← IO.asTask (prio := Task.Priority.dedicated) (canonicalIO type (UInt64.ofNat timeout) config.count config.synth)
+    let task ← IO.asTask (prio := Task.Priority.dedicated)
+      (canonicalIO type (UInt64.ofNat timeout) config.count config.synth config.debug)
     while !(← IO.hasFinished task) do
       if ← checkInterrupted then
         IO.cancel task
