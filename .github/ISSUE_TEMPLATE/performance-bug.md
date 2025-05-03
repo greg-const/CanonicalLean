@@ -49,3 +49,4 @@ Let us know if you believe a particular aspect of the problem is responsible for
 1. Reasoning with the "arrow" type constructor (add `+pi`).
 2. Canonical does not currently support the Eta law for structures.
 3. Speculative use of a function with reduction behavior (add `+synth` once stable).
+4. "Explosive" recursive unfolding of complex definitions that should be opaque.
