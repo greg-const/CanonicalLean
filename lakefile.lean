@@ -1,8 +1,7 @@
 import Lake
 open Lake DSL
 
-package Canonical where
-  precompileModules := true
+package Canonical
 
 target canonical : Dynlib := do pure $ Job.pure {
   path := __dir__ / ".lake" / "build" / "lib" / nameToSharedLib "canonical_lean"
@@ -10,4 +9,7 @@ target canonical : Dynlib := do pure $ Job.pure {
 }
 
 @[default_target]
-lean_lib Canonical {moreLinkLibs := #[canonical]}
+lean_lib Canonical {
+  precompileModules := true
+  moreLinkLibs := #[canonical]
+}
