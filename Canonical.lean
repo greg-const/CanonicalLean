@@ -77,8 +77,9 @@ structure HardCode where
 
 /-- Rather than recursively unfolding definitions, `HARD_CODE` overrides
     the definitions introduced by a given symbol. -/
-def HARD_CODE : Std.HashMap (Name × Name) HardCode :=
-  Std.HashMap.empty.insert ⟨`Mathlib.Data.Real.Basic, `Real⟩ ⟨[]⟩
+def HARD_CODE : Std.HashMap (Name × Name) HardCode := .ofList [
+    ⟨⟨`Mathlib.Data.Real.Basic, `Real⟩, ⟨[]⟩⟩
+  ]
 
 def getHardCode (name : Name) : CoreM (Option HardCode) := do
   if let some module ← Lean.findModuleOf? name then
@@ -274,20 +275,20 @@ mutual
     | forallE binderName binderType body binderInfo =>
       match arity, args with
       | [], arg :: args => pure ⟨⟨params.reverse⟩, ⟨defs⟩, (``Pi.f).toString, #[
-        ← toTerm binderType (mkSort .zero) insideLet 0,
-        ← toTerm (mkLambda binderName binderInfo binderType body) (mkForall binderName binderInfo binderType (mkSort .zero)) insideLet 1,
-        ← toBody (body.instantiate1 arg) [] [] head args insideLet [] state [],
-        ← toTerm arg binderType insideLet (← forallArity binderType)
-      ]⟩
+          ← toTerm binderType (mkSort .zero) insideLet 0,
+          ← toTerm (mkLambda binderName binderInfo binderType body) (mkForall binderName binderInfo binderType (mkSort .zero)) insideLet 1,
+          ← toBody (body.instantiate1 arg) [] [] head args insideLet [] state [],
+          ← toTerm arg binderType insideLet (← forallArity binderType)
+        ]⟩
       | n :: arity, arg :: args =>
         toBody (body.instantiate1 arg) params defs head args insideLet arity (state.push (← toTerm arg binderType insideLet n)) typeArgs
       | _, [] =>
         withLocalDecl binderName binderInfo binderType fun fvar => do
-          pure ⟨⟨params.reverse⟩, ⟨defs⟩, (``Pi.mk).toString, #[
-            ← toTerm binderType (mkSort .zero) insideLet 0,
-            ← toTerm (body.instantiate1 fvar) (mkSort .zero) insideLet 0 [⟨← nameString fvar, ← isProp binderType⟩],
-            ← toBody (body.instantiate1 fvar) [⟨← nameString fvar, ← isProp binderType⟩] [] head (fvar :: args) insideLet arity state []
-          ]⟩
+            pure ⟨⟨params.reverse⟩, ⟨defs⟩, (``Pi.mk).toString, #[
+              ← toTerm binderType (mkSort .zero) insideLet 0,
+              ← toTerm (body.instantiate1 fvar) (mkSort .zero) insideLet 0 [⟨← nameString fvar, ← isProp binderType⟩],
+              ← toBody (body.instantiate1 fvar) [⟨← nameString fvar, ← isProp binderType⟩] [] head (fvar :: args) insideLet arity state []
+            ]⟩
     | letE declName type value body _ =>
       withLetDecl declName type value fun fvar => do
         toBody (body.instantiate1 fvar) params (⟨← nameString fvar, ← isProp type, Value.definition (← toTerm value type insideLet (← forallArity type))⟩ :: defs) head args insideLet arity state typeArgs
@@ -321,19 +322,19 @@ mutual
       withLocalDecl binderName binderInfo binderType fun fvar => do
         match arity with
         | 0 => pure ⟨⟨params.reverse⟩, ⟨defs⟩, (``Pi.mk).toString, #[
-          ← toTerm binderType' (mkSort .zero) insideLet 0,
-          ← toTerm (body'.instantiate1 fvar) (mkSort .zero) insideLet 1 [⟨← nameString fvar, ← isProp binderType⟩],
-          ← toTerm (body.instantiate1 fvar) (body'.instantiate1 fvar) insideLet 0 [⟨← nameString fvar, ← isProp binderType⟩]
-        ]⟩
+            ← toTerm binderType' (mkSort .zero) insideLet 0,
+            ← toTerm (body'.instantiate1 fvar) (mkSort .zero) insideLet 1 [⟨← nameString fvar, ← isProp binderType⟩],
+            ← toTerm (body.instantiate1 fvar) (body'.instantiate1 fvar) insideLet 0 [⟨← nameString fvar, ← isProp binderType⟩]
+          ]⟩
         | n + 1 => toTerm (body.instantiate1 fvar) (body'.instantiate1 fvar) insideLet n (⟨← nameString fvar, ← isProp binderType⟩ :: params) defs args typeArgs
     | _, forallE binderName binderType body binderInfo, _ =>
         withLocalDecl binderName binderInfo binderType fun fvar => do
           match arity with
           | 0 => pure ⟨⟨params.reverse⟩, ⟨defs⟩, (``Pi.mk).toString, #[
-          ← toTerm binderType (mkSort .zero) insideLet 0,
-          ← toTerm (body.instantiate1 fvar) (mkSort .zero) insideLet 0 [⟨← nameString fvar, ← isProp binderType⟩],
-          ← toTerm term (body.instantiate1 fvar) insideLet 0 [⟨← nameString fvar, ← isProp binderType⟩] [] [fvar] []
-        ]⟩
+              ← toTerm binderType (mkSort .zero) insideLet 0,
+              ← toTerm (body.instantiate1 fvar) (mkSort .zero) insideLet 0 [⟨← nameString fvar, ← isProp binderType⟩],
+              ← toTerm term (body.instantiate1 fvar) insideLet 0 [⟨← nameString fvar, ← isProp binderType⟩] [] (args ++ [fvar]) []
+            ]⟩
           | n + 1 => toTerm term (body.instantiate1 fvar) insideLet n (⟨← nameString fvar, ← isProp binderType⟩ :: params) defs (args ++ [fvar])
     | lam _ _ _ _, const declName _, [] =>
       match (←Lean.getConstInfo declName).value? with
@@ -555,13 +556,15 @@ elab (name := canonicalSeq) "canonical " timeout_syntax:(num)? config:Parser.Tac
       pure (dePi (← (toLam goal term [] 0).run' map))
 
     MonadWithOptions.withOptions (fun opts => (((opts.set `pp.proofs true).set `pp.motives.all true).set `pp.coercions false).set `pp.unicode.fun true) do
-      if proofs.size = 0 then
+      if proofs.isEmpty then
         match timeout_syntax with
         | some _ => throwError "No proof found."
         | none => throwError "No proof found. Change timeout to `n` with `canonical n`"
-      if h : proofs.size = 1 then
-        Meta.Tactic.TryThis.addExactSuggestion (← getRef) proofs[0]
       else
-        Meta.Tactic.TryThis.addExactSuggestions (← getRef) proofs
+        Elab.admitGoal (← getMainGoal)
+        if h : proofs.size = 1 then
+          Meta.Tactic.TryThis.addExactSuggestion (← getRef) proofs[0]
+        else
+          Meta.Tactic.TryThis.addExactSuggestions (← getRef) proofs
     -- dbg_trace ←start.since
     -- dbg_trace "{←start.since}\t{result.attempted_resolutions}\t{result.successful_resolutions}\t{result.steps}\t{result.last_level_steps}\t{result.branching}\t{size proof}"
