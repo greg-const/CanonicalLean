@@ -6,7 +6,7 @@ https://github.com/user-attachments/assets/ec13ad85-7d09-4a32-9c73-3b5b501722a4
 
 ## Installation
 
-Canonical is available for Lean `v4.18.0`.
+Canonical is available for Lean `v4.19.0`.
 
 Add the following dependency to your `lakefile.toml`:
 ```
@@ -45,3 +45,5 @@ axiom P_ne_not_P : P ≠ ¬ P
 theorem Cantor (f : X → Set X) : ¬ ∀ y, ∃ x, f x = y :=
   by canonical [P_ne_not_P, congrFun]
 ```
+
+More examples can be found [in the Canonical repository](https://github.com/chasenorman/Canonical/tree/main/lean/Results).
