@@ -378,9 +378,13 @@ def toCanonical (e : Expr) (consts : List Syntax) (pi : Bool) : ToCanonicalM Typ
 
   consts.forM (fun stx => match stx with
     | Syntax.ident _ _ val _ => do
-      let _ := ← define ((←Lean.resolveGlobalName val).getLast!.1) 0 true
+      let names ← Lean.resolveGlobalName val
+      if h : names ≠ [] then
+        let _ := ← define (names.getLast h).1 0 true
+      else
+        throwErrorAt stx "Not a constant name:{indentD stx}"
       pure ()
-    | stx => throwErrorAt stx "Not a constant name:{indentD stx}"
+    | stx => throwErrorAt stx "Not an identifier:{indentD stx}"
   )
   if pi then let _ := ← define ``Canonical.Pi 0 true
 
