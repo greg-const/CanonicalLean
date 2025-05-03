@@ -20,11 +20,6 @@ require Canonical from git
   "https://github.com/chasenorman/CanonicalLean.git"
 ```
 
-On Windows, an additional line at the top of your `lakefile.toml` is necessary:
-```
-moreGlobalServerArgs = [ "--load-dynlib", "./.lake/packages/Canonical/.lake/build/lib/canonical.dll" ]
-```
-
 ## Usage
 
 Basic examples:

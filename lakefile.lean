@@ -1,7 +1,8 @@
 import Lake
 open Lake DSL
 
-package Canonical
+package Canonical where
+  preferReleaseBuild := true
 
 target canonical pkg : Dynlib := do pure $ Job.pure {
   path := pkg.sharedLibDir / nameToSharedLib "canonical_lean"

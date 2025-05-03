@@ -1,5 +1,0 @@
-{"log":
- [{"message":
-   ".> LEAN_PATH=././.lake/build/lib/lean /Users/chasenorman/.elan/toolchains/leanprover--lean4---v4.19.0/bin/lean ././././Canonical.lean -R ./././. -o ././.lake/build/lib/lean/Canonical.olean -i ././.lake/build/lib/lean/Canonical.ilean -c ././.lake/build/ir/Canonical.c --json",
-   "level": "trace"}],
- "depHash": "15298517899305110338"}
