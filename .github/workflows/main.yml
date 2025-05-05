@@ -22,7 +22,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: DownloadCanonical
+      - name: Download Canonical
+        shell: bash
         run: |
           mkdir -p .lake/build/lib
           curl -L -o .lake/build/lib/${{ matrix.filename }} \
