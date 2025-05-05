@@ -6,7 +6,7 @@ https://github.com/user-attachments/assets/ec13ad85-7d09-4a32-9c73-3b5b501722a4
 
 ## Installation
 
-Canonical is available for Lean `v4.19.0`.
+Canonical is available for Lean `v4.20.0-rc3`.
 
 Add the following dependency to your `lakefile.toml`:
 ```
@@ -18,6 +18,8 @@ Or, if you are using a `lakefile.lean`:
 ```
 require "chasenorman" / "Canonical"
 ```
+
+You should then be prompted to run `lake update Canonical`.
 
 ## Usage
 
