@@ -24,3 +24,6 @@ target canonical pkg : Dynlib := do pure $ Job.pure {
 lean_lib Canonical where
   precompileModules := true
   moreLinkLibs := #[canonical]
+
+@[test_driver]
+lean_lib Test

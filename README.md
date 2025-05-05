@@ -12,12 +12,11 @@ Add the following dependency to your `lakefile.toml`:
 ```
 [[require]]
 name = "Canonical"
-git = "https://github.com/chasenorman/CanonicalLean"
+scope = "chasenorman"
 ```
 Or, if you are using a `lakefile.lean`:
 ```
-require Canonical from git
-  "https://github.com/chasenorman/CanonicalLean.git"
+require "chasenorman" / "Canonical"
 ```
 
 ## Usage

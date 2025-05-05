@@ -1,0 +1,38 @@
+name: Upload
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag'
+        required: true
+
+jobs:
+  upload:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            filename: libcanonical_lean.so
+          - os: macos-latest
+            filename: libcanonical_lean.dylib
+          - os: windows-latest
+            filename: canonical_lean.dll
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: DownloadCanonical
+        run: |
+          mkdir -p .lake/build/lib
+          curl -L -o .lake/build/lib/${{ matrix.filename }} \
+            https://github.com/chasenorman/Canonical/releases/download/lean/${{ matrix.filename }}
+
+      - uses: leanprover/lean-action@v1
+        with:
+          check-reservoir-eligibility: true
+
+      - name: Lake Upload
+        run: lake upload ${{ github.event.inputs.tag }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
