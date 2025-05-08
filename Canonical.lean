@@ -63,6 +63,9 @@ instance : ToString Typ where toString := typToString
 /-- Generate terms of a given type, with given timeout, desired count, `synth` and `debug` flags -/
 @[extern "canonical"] opaque canonical : @& Typ → UInt64 → USize → Bool → Bool → CanonicalResult
 
+/-- Start a server with the refinement UI on the given type. -/
+@[extern "refine"] opaque refine : @& Typ → Bool → Bool
+
 /-- Some Lean Π-types cannot be converted into Canonical Π-types,
     and are instead converted into this structure. -/
 structure Pi (A : Type u) (B : A → Type v) where
@@ -499,6 +502,8 @@ structure CanonicalConfig where
   /-- Provides `(A → B) : Sort` as an axiom to Canonical. -/
   pi: Bool := false
   debug: Bool := false
+  /-- Opens the refinement UI (beta). -/
+  refine: Bool := false
 
 declare_config_elab canonicalConfig CanonicalConfig
 
@@ -521,6 +526,20 @@ end Canonical
 open Canonical
 open Lean Elab Meta Tactic
 
+/-- The widget for the refinement UI. -/
+@[widget_module]
+def refineWidget : Widget.Module where
+  javascript := "
+    import * as React from 'react';
+    export default function(props) {
+      return React.createElement('iframe', {
+        src: 'http://localhost:3000',
+        width: '100%',
+        height: '500px',
+        style: { border: 'none' }
+      });
+    }"
+
 syntax canonicalRuleSeq := " [" withoutPosition(term,*,?) "]"
 /-- Canonical exhaustively searches for terms in dependent type theory. -/
 elab (name := canonicalSeq) "canonical " timeout_syntax:(num)? config:Parser.Tactic.optConfig s:(canonicalRuleSeq)? : tactic => do
@@ -538,6 +557,13 @@ elab (name := canonicalSeq) "canonical " timeout_syntax:(num)? config:Parser.Tac
 
     let goal ← getMainTarget
     let type ← toCanonical goal argList config.pi |>.run' default
+
+    if config.refine then
+      let b := refine type config.synth
+      Elab.admitGoal (← getMainGoal)
+      Lean.Widget.savePanelWidgetInfo (hash refineWidget.javascript) (← getRef) (props := return json% {})
+      dbg_trace b
+      return
 
     let timeout := match timeout_syntax with
     | some n => n.getNat
