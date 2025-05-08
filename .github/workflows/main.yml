@@ -21,6 +21,8 @@ jobs:
             filename: canonical_lean.dll
     steps:
       - uses: actions/checkout@v4
+        with:
+          use-github-cache: false
 
       - name: Download Canonical
         shell: bash
